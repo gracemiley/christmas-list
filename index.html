@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>christmas list</title>
+<link rel="icon" href="favicon.webp" type="image/webp">
+<style>
+@font-face{font-family:"Authentic Sans";src:url("authentic-sans-60.otf") format("opentype");font-display:swap}
+:root{
+  --green:#60BB46; --blue:#B0CEDA; --yellow:#F0EA31;
+  --lpink:#F4B2D0; --pink:#F051B2; --cream:#FFF6F3;
+  --h:380px;      /* item image height */
+  --room:500px;   /* space reserved under each card so hover details never push anything around */
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--cream);color:var(--green)}
+body{font-family:"Authentic Sans",system-ui,sans-serif;line-height:1.35}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--pink);outline-offset:3px}
+
+/* hero + home icon */
+.herowrap{position:relative}
+.hero{display:block;width:100%;height:auto}
+.home{position:absolute;top:18px;left:20px;z-index:10;display:block;line-height:0}
+.home img{width:56px;height:56px;display:block;object-fit:contain}
+
+.bar{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;padding:36px 40px 20px}
+.bar h1{margin:0;font-size:2.2rem;font-weight:400}
+.sort{display:flex;align-items:center;gap:12px;font-size:1.05rem}
+.sort select{
+  appearance:none;-webkit-appearance:none;font:inherit;color:var(--green);background-color:var(--cream);
+  border:2px solid var(--pink);border-radius:999px;padding:9px 46px 9px 20px;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='10' viewBox='0 0 16 10'%3E%3Cpath d='M2 2l6 6 6-6' fill='none' stroke='%23F051B2' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 18px center;
+}
+
+/* carousel */
+.carousel{position:relative}
+.scroller{
+  overflow-x:auto;overflow-y:hidden;scrollbar-width:none;padding:0 40px;
+  height:calc(var(--h) + 56px + var(--room));
+  overscroll-behavior-x:contain;
+}
+.scroller::-webkit-scrollbar{display:none}
+.track{display:flex;align-items:flex-start;gap:28px;width:max-content;height:100%}
+
+.card{position:relative;flex:none;min-width:240px}
+.card:focus-visible{outline:none}
+.card:focus-visible .label{text-decoration:underline}
+.card .photo{display:block;height:var(--h);width:auto}
+.card .label{height:56px;padding-top:10px;font-size:1.1rem}
+
+/* hover details float over the empty space below: nothing else moves */
+.panel{
+  position:absolute;top:calc(var(--h) + 56px);left:0;z-index:4;
+  width:max(100%,260px);max-width:340px;padding:4px 0 16px;background:var(--cream);
+  opacity:0;visibility:hidden;transform:translateY(-6px);
+  transition:opacity .25s ease,transform .25s ease,visibility 0s linear .25s;
+}
+.card:hover .panel,.card:focus-within .panel,.card.open .panel{
+  opacity:1;visibility:visible;transform:none;transition-delay:0s;
+}
+.extras{max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:10px;margin-bottom:14px;scrollbar-color:var(--pink) var(--cream)}
+.extras img{width:100%;height:auto;display:block}
+.panel dl{margin:0 0 14px;display:grid;grid-template-columns:auto 1fr;gap:4px 14px}
+.panel dt{opacity:.75}
+.panel dd{margin:0}
+
+.pill{display:inline-block;padding:10px 26px;border-radius:999px;text-decoration:none;font-size:1rem}
+.pill:hover{filter:brightness(.96)}
+.c-green{background:var(--green);color:var(--cream)}
+.c-pink{background:var(--pink);color:var(--cream)}
+.c-blue{background:var(--blue);color:var(--pink)}
+.c-yellow{background:var(--yellow);color:var(--pink)}
+.c-lpink{background:var(--lpink);color:var(--pink)}
+
+.end{flex:none;width:170px;height:var(--h);background:var(--pink);color:var(--cream);
+  display:flex;align-items:center;justify-content:center;font-size:1.5rem;text-align:center;padding:12px}
+
+/* single right arrow, pill shaped */
+.arrow{position:absolute;top:calc(var(--h) / 2 - 22px);right:16px;z-index:6;width:68px;height:44px;border-radius:999px;border:0;
+  background:var(--pink);color:var(--cream);cursor:pointer;display:grid;place-items:center}
+.arrow:hover{background:var(--green)}
+.arrow svg{width:22px;height:22px}
+
+#snow{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9999}
+
+@media (max-width:640px){
+  :root{--h:300px;--room:470px}
+  .bar{padding:24px 20px 14px}.scroller{padding:0 20px}
+  .home{top:12px;left:12px}.home img{width:44px;height:44px}
+  .arrow{width:56px;height:40px;top:calc(var(--h) / 2 - 20px)}
+}
+@media (prefers-reduced-motion:reduce){.panel{transition:none}}
+</style>
+</head>
+<body>
+
+<div class="herowrap">
+  <a class="home" href="index.html" aria-label="Home"><img src="favicon.webp" alt=""></a>
+  <img class="hero" src="landing_hero.webp" alt="Christmas list">
+</div>
+
+<div class="bar" id="list">
+  <h1>christmas list</h1>
+  <label class="sort">sort by
+    <select id="sort">
+      <option value="default">original order</option>
+      <option value="price-asc">price: low to high</option>
+      <option value="price-desc">price: high to low</option>
+      <option value="desire-desc">desire: high to low</option>
+      <option value="desire-asc">desire: low to high</option>
+    </select>
+  </label>
+</div>
+
+<section class="carousel" aria-label="Christmas list items">
+  <div class="scroller" id="scroller"><div class="track" id="track"></div></div>
+  <button class="arrow" id="next" aria-label="Scroll right"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 4l8 8-8 8"/></svg></button>
+</section>
+
+<canvas id="snow" aria-hidden="true"></canvas>
+
+<script>
+/* price: number, "a lot", or "varies". link: null hides the button. */
+const ITEMS = [
+  {name:"Chelsea Funnel-neck Oversized Jacket", imgs:["jacket_free_people.webp"], price:168, color:"oatmeal", size:"medium", desire:8, shop:"Free People",
+   link:"https://www.freepeople.com/shop/chelsea-funnel-neck-jacket/?color=011&searchparams=q%3DChelsea%20Jacket&type=REGULAR&quantity=1&utm_source=Pinterest&utm_medium=organic&epik=dj0yJnU9RjRmQUxQUTFucEYwcmFVT2hRRW1iQ2lYcVlkZUppN0ImcD0wJm49NEs5Tzc4V2lWMUxqSkhWQnRpeWxhUSZ0PUFBQUFBR3NBZmw4"},
+  {name:"Small Purse", imgs:["small_purse_1.webp","small_purse_2.webp"], price:"varies", color:"black, pink or brown", size:"small", desire:8, link:null},
+  {name:"Furry Hat", imgs:["furry_hat_1.webp","furry_hat_2.webp"], price:"varies", color:"brown, pink or grey", desire:8, shop:"Free People (or find elsewhere)",
+   link:"https://www.freepeople.com/shop/luxy-lou-fur-trapper-hat/?color=012&searchparams=q%3Dfur%2520hat"},
+  {name:"Boots", imgs:["boots_1.webp"], price:42, priceLabel:"$42 – $330 (5 options)", color:"5 options", size:"8", desire:9,
+   link:"boots.html", linkText:"see all 5 boots", sameTab:true},
+  {name:"Cute Mittens or Gloves", imgs:["gloves_1.webp","gloves_2.webp","gloves_3.webp"], price:"varies", color:"blue, pink, brown, grey or other", desire:8, link:null},
+  {name:"Personal Training Sessions", imgs:["personal_training_1.webp"], price:"a lot", desire:10, shop:"Define.fit", link:"https://www.define.fit/private-training"},
+  {name:"Therapy Co-Pay Cost", imgs:["therapy_1.webp"], price:"a lot", desire:8, link:null},
+  {name:"Grey Akimbo Hoodie", imgs:["hoodie_1.webp"], price:160, color:"grey", size:"large", desire:9, shop:"Akimbo",
+   link:"https://akimbo.us/products/akimbo-hoodie-heather-grey?variant=41601001717808"}
+];
+
+const PILLS = ["c-green","c-blue","c-yellow","c-lpink","c-pink"];
+const shuffle = a => { a = a.slice(); for (let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+let deck = [];
+ITEMS.forEach(it => { if(!deck.length) deck = shuffle(PILLS); it.pill = deck.pop(); });
+
+const priceKey = it => typeof it.price === "number" ? it.price : it.price === "a lot" ? 1e6 : null;
+const priceText = it => it.priceLabel || (typeof it.price === "number" ? "$" + it.price : it.price);
+
+const track = document.getElementById("track");
+const scroller = document.getElementById("scroller");
+let setW = 0;
+
+function cardHTML(it){
+  const rows = [["price", priceText(it)]];
+  if (it.color) rows.push(["color", it.color]);
+  if (it.size) rows.push(["size", it.size]);
+  rows.push(["desire", it.desire + "/10"]);
+  if (it.shop) rows.push(["store", it.shop]);
+  const extras = it.imgs.slice(1).map(s => `<img src="${s}" alt="${it.name}">`).join("");
+  const btn = it.link ? `<a class="pill ${it.pill}" href="${it.link}" ${it.sameTab ? "" : 'target="_blank" rel="noopener noreferrer"'}>${it.linkText || "link to buy"}</a>` : "";
+  return `<article class="card" tabindex="0">
+    <img class="photo" src="${it.imgs[0]}" alt="${it.name}">
+    <div class="label">${it.name}</div>
+    <div class="panel">
+      ${extras ? `<div class="extras">${extras}</div>` : ""}
+      <dl>${rows.map(r => `<dt>${r[0]}</dt><dd>${r[1]}</dd>`).join("")}</dl>
+      ${btn}
+    </div></article>`;
+}
+
+function build(list){
+  const one = list.map(cardHTML).join("") + `<div class="end">that's all.</div>`;
+  /* three copies = seamless loop that restarts after "that's all." */
+  track.innerHTML = `<div style="display:contents">${one}</div>`.repeat(3);
+  const imgs = [...track.querySelectorAll(".photo")];
+  Promise.all(imgs.map(i => i.decode ? i.decode().catch(()=>{}) : Promise.resolve())).then(() => measure(true));
+  setTimeout(() => measure(false), 800);
+}
+
+function measure(reposition){
+  const ends = track.querySelectorAll(".end");
+  if (ends.length < 2) return;
+  setW = ends[1].offsetLeft - ends[0].offsetLeft;
+  if (setW && (reposition || scroller.scrollLeft < setW * 0.5)) scroller.scrollLeft = setW + (scroller.scrollLeft % setW);
+}
+
+let timer;
+scroller.addEventListener("scroll", () => {
+  clearTimeout(timer);
+  timer = setTimeout(() => {
+    if (!setW) return;
+    if (scroller.scrollLeft < setW * 0.5) scroller.scrollLeft += setW;
+    else if (scroller.scrollLeft > setW * 1.5) scroller.scrollLeft -= setW;
+  }, 150);
+}, {passive:true});
+
+document.getElementById("next").onclick = () =>
+  scroller.scrollBy({left: Math.max(300, scroller.clientWidth * 0.8), behavior:"smooth"});
+
+/* touch screens: tap a card to open its details */
+scroller.addEventListener("click", e => {
+  if (!matchMedia("(hover: none)").matches || e.target.closest("a")) return;
+  const card = e.target.closest(".card");
+  if (!card) return;
+  const was = card.classList.contains("open");
+  track.querySelectorAll(".card.open").forEach(c => c.classList.remove("open"));
+  if (!was) card.classList.add("open");
+});
+
+document.getElementById("sort").addEventListener("change", e => {
+  const v = e.target.value;
+  let list = ITEMS.slice();
+  if (v.startsWith("price")) {
+    const dir = v.endsWith("asc") ? 1 : -1;
+    list.sort((a,b) => {
+      const x = priceKey(a), y = priceKey(b);
+      if (x === null && y === null) return 0;
+      if (x === null) return 1;   /* "varies" always last */
+      if (y === null) return -1;
+      return (x - y) * dir;
+    });
+  } else if (v.startsWith("desire")) {
+    const dir = v.endsWith("asc") ? 1 : -1;
+    list.sort((a,b) => (a.desire - b.desire) * dir);
+  }
+  scroller.scrollLeft = 0;
+  build(list);
+});
+
+build(ITEMS);
+
+/* snow: small white dots of varying size, falling slowly over everything */
+(function(){
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const c = document.getElementById("snow"), ctx = c.getContext("2d");
+  let W, H, flakes = [];
+  function size(){
+    const d = window.devicePixelRatio || 1;
+    W = innerWidth; H = innerHeight;
+    c.width = W * d; c.height = H * d;
+    ctx.setTransform(d,0,0,d,0,0);
+    const n = Math.round(Math.min(160, Math.max(60, W * H / 11000)));
+    while (flakes.length < n) flakes.push(make(true));
+    flakes.length = n;
+  }
+  function make(anywhere){
+    return {x:Math.random()*W, y:anywhere ? Math.random()*H : -8,
+      r:1+Math.random()*3.2, v:.25+Math.random()*.6, sway:Math.random()*Math.PI*2, amp:.2+Math.random()*.5};
+  }
+  function tick(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = "#FFFFFF";
+    for (const f of flakes){
+      f.y += f.v * (0.6 + f.r*0.15);
+      f.sway += .01;
+      f.x += Math.sin(f.sway) * f.amp;
+      if (f.y > H + 8){ Object.assign(f, make(false)); }
+      if (f.x > W + 8) f.x = -8; else if (f.x < -8) f.x = W + 8;
+      ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, 6.2832); ctx.fill();
+    }
+    requestAnimationFrame(tick);
+  }
+  addEventListener("resize", size);
+  size(); tick();
+})();
+</script>
+</body>
+</html>

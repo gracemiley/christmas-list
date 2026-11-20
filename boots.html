@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>boots | christmas list</title>
+<link rel="icon" href="favicon.webp" type="image/webp">
+<style>
+@font-face{font-family:"Authentic Sans";src:url("authentic-sans-60.otf") format("opentype");font-display:swap}
+:root{--green:#60BB46;--blue:#B0CEDA;--yellow:#F0EA31;--lpink:#F4B2D0;--pink:#F051B2;--cream:#FFF6F3}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--cream);color:var(--green)}
+body{font-family:"Authentic Sans",system-ui,sans-serif;line-height:1.35;padding:18px 40px 70px}
+:focus-visible{outline:3px solid var(--pink);outline-offset:3px}
+header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:32px}
+.left{display:flex;align-items:center;gap:20px}
+.home{display:block;line-height:0}
+.home img{width:56px;height:56px;display:block;object-fit:contain}
+h1{margin:0;font-size:2.2rem;font-weight:400}
+.pill{display:inline-block;padding:10px 26px;border-radius:999px;text-decoration:none;font-size:1rem}
+.pill:hover{filter:brightness(.96)}
+.c-green{background:var(--green);color:var(--cream)}
+.c-pink{background:var(--pink);color:var(--cream)}
+.c-blue{background:var(--blue);color:var(--pink)}
+.c-yellow{background:var(--yellow);color:var(--pink)}
+.c-lpink{background:var(--lpink);color:var(--pink)}
+.grid{display:flex;flex-wrap:wrap;gap:40px 28px;align-items:flex-start}
+.boot{max-width:360px}
+.boot img{display:block;height:360px;width:auto;max-width:100%}
+.boot h2{margin:12px 2px 8px;font-size:1.1rem;font-weight:400}
+dl{margin:0 0 14px 2px;display:grid;grid-template-columns:auto 1fr;gap:4px 14px}
+dt{opacity:.75}dd{margin:0}
+.note{display:block;margin:0 0 14px 2px;padding:8px 16px;background:var(--lpink);color:var(--pink);width:fit-content}
+#snow{position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:9999}
+@media (max-width:640px){body{padding:12px 20px 50px}.boot img{height:280px}.home img{width:44px;height:44px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="left">
+    <a class="home" href="index.html" aria-label="Home"><img src="favicon.webp" alt=""></a>
+    <h1>boots</h1>
+  </div>
+  <a class="pill c-pink" href="index.html#list">back to the list</a>
+</header>
+
+<main class="grid" id="grid"></main>
+
+<canvas id="snow" aria-hidden="true"></canvas>
+
+<script>
+const BOOTS = [
+  {img:"boots_1.webp", price:285, color:"white / brown", store:"Poshmark",
+   link:"https://poshmark.com/listing/Marc-Jacobs-Aprs-Ski-Moon-Boots-6771c1c8f33f71f26fbd580b"},
+  {img:"boots_2.avif", price:285, color:"black", store:"Mytheresa",
+   link:"https://www.mytheresa.com/us/en/women/moon-boot-icon-low-faux-fur-trimmed-snow-boots-black-p00868134?dplink=true&chn=aff1&src=linkshare&cmp=aff_linksh_us&tarea=us&pub_id=2116208&pub_name=Skimlinks.com&pub_type=2116208&ptyp=10&utm_source=affiliate&utm_medium=affiliate_linkshare_us&PID=2116208&utm_content=2116208&ranMID=43172&ranEAID=TnL5HPStwNw&ranSiteID=TnL5HPStwNw-VXBFkjX2HkaJYkp7l5ds2g&slink_id=6724f665-8c40-4fdf-ae3c-cf194b282cd4"},
+  {img:"boots_3.avif", price:330, color:"black", store:"Amazon",
+   link:"https://www.amazon.com/Moon-Boot-Unisex-M7-8-5-W8-9-5/dp/B0D9LM3NSC?ref_=lx_bd&th=1&psc=1"},
+  {img:"boots_4.avif", price:42, color:"black", store:"Amazon", note:"if you buy boot 4, please also buy boot 5",
+   link:"https://www.amazon.com/dp/B0D6K6RTVV/ref=twister_B0D6KB2KMW?_encoding=UTF8&th=1&psc=1"},
+  {img:"boots_5.avif", price:42, color:"pink", store:"Amazon", note:"goes with boot 4",
+   link:"https://www.amazon.com/dp/B0D6K9GFSP/ref=twister_B0D6KB2KMW?_encoding=UTF8&th=1&psc=1"}
+];
+const PILLS = ["c-green","c-blue","c-yellow","c-lpink","c-pink"].sort(() => Math.random() - 0.5);
+document.getElementById("grid").innerHTML = BOOTS.map((b,i) => `
+  <article class="boot">
+    <img src="${b.img}" alt="Boot option ${i+1}, ${b.color}">
+    <h2>boot ${i+1}</h2>
+    <dl>
+      <dt>price</dt><dd>$${b.price}</dd>
+      <dt>color</dt><dd>${b.color}</dd>
+      <dt>size</dt><dd>8</dd>
+      <dt>store</dt><dd>${b.store}</dd>
+    </dl>
+    ${b.note ? `<span class="note">${b.note}</span>` : ""}
+    <a class="pill ${PILLS[i]}" href="${b.link}" target="_blank" rel="noopener noreferrer">link to buy</a>
+  </article>`).join("");
+
+/* snow: small white dots of varying size, falling slowly over everything */
+(function(){
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const c = document.getElementById("snow"), ctx = c.getContext("2d");
+  let W, H, flakes = [];
+  function size(){
+    const d = window.devicePixelRatio || 1;
+    W = innerWidth; H = innerHeight;
+    c.width = W * d; c.height = H * d;
+    ctx.setTransform(d,0,0,d,0,0);
+    const n = Math.round(Math.min(160, Math.max(60, W * H / 11000)));
+    while (flakes.length < n) flakes.push(make(true));
+    flakes.length = n;
+  }
+  function make(anywhere){
+    return {x:Math.random()*W, y:anywhere ? Math.random()*H : -8,
+      r:1+Math.random()*3.2, v:.25+Math.random()*.6, sway:Math.random()*Math.PI*2, amp:.2+Math.random()*.5};
+  }
+  function tick(){
+    ctx.clearRect(0,0,W,H);
+    ctx.fillStyle = "#FFFFFF";
+    for (const f of flakes){
+      f.y += f.v * (0.6 + f.r*0.15);
+      f.sway += .01;
+      f.x += Math.sin(f.sway) * f.amp;
+      if (f.y > H + 8){ Object.assign(f, make(false)); }
+      if (f.x > W + 8) f.x = -8; else if (f.x < -8) f.x = W + 8;
+      ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, 6.2832); ctx.fill();
+    }
+    requestAnimationFrame(tick);
+  }
+  addEventListener("resize", size);
+  size(); tick();
+})();
+</script>
+</body>
+</html>
